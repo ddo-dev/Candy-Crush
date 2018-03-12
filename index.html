@@ -1,0 +1,376 @@
+<!--
+CandyCrush
+Your Name: Dieu Do  
+Collaborators: None
+-->
+<!DOCTYPE html>
+<html>
+<!--
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+-->
+
+<head>
+<meta charset="utf-8">
+<title>CandyCrush</title>
+
+<!-- Load style sheets -->
+<link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.css">
+
+<link rel="stylesheet" href="mainLayout.css">
+
+<!-- Use mobile-aware viewport -->
+<meta name="viewport" content=
+  "width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Load any supplemental Javascript libraries here -->
+<script src=
+  "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src=
+  "https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.js">
+</script>
+<script src="candy.js"></script>
+<script src="board.js"></script>
+<script src="rules.js"></script>
+<script src="table.js"></script>
+<script>
+
+// By default, the first board loaded by your page will be the same 
+// each time you load (which is accomplished by "seeding" the random
+// number generator. This makes testing (and grading!) easier!
+Math.seedrandom(0);
+
+
+// A short jQuery extension to read query parameters from the URL.
+$.extend({
+  getUrlVars: function() {
+    var vars = [], pair;
+    var pairs = window.location.search.substr(1).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      pair = pairs[i].split('=');
+      vars.push(pair[0]);
+      vars[pair[0]] = pair[1] &&
+          decodeURIComponent(pair[1].replace(/\+/g, ' '));
+    }
+    return vars;
+  },
+  getUrlVar: function(name) {
+    return $.getUrlVars()[name];
+  }
+});
+
+// constants
+var DEFAULT_BOARD_SIZE = 8;
+
+// data model at global scope for easier debugging
+var board;
+var rules;
+var col_array = ["a","b","c","d","e","f","g","h"];
+var inputBoxInfo;
+var validInput = false;
+var image_array;
+
+
+
+// initialize board
+if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
+  board = new Board($.getUrlVar('size'));
+} else {
+  board = new Board(DEFAULT_BOARD_SIZE);
+}
+
+// load a rule
+rules = new Rules(board);
+
+// Final initialization entry point: the Javascript code inside this block
+// runs at the end of start-up when the page has finished loading.
+$(document).ready(function()
+{
+  // Your code here.
+});
+
+
+/* Event Handlers */
+// access the candy object with info.candy
+
+// add a candy to the board
+$(board).on('add', function(e, info)
+{
+  // Your code here.
+});
+
+// move a candy on the board
+$(board).on('move', function(e, info)
+{
+  // Your code here.
+});
+
+// remove a candy from the board
+$(board).on('remove', function(e, info)
+{
+  // Your code here.
+});
+
+// move a candy on the board
+$(board).on('scoreUpdate', function(e, info)
+{
+  // Your code here. To be implemented in pset 2.
+});
+
+// keyboard events arrive here
+$(document).on('keydown', function(evt) {
+  // Your code here.
+});
+
+// Button Events
+$(document).on('click', "#newGame", function(evt)
+{
+  rules.cleanBoard();
+  rules.prepareNewGame();
+  $("#mainColumn").html(colorTable());  
+});
+
+
+$(document).keypress(function(evt){
+  if(evt.which == 13){
+    checkInput();
+  }
+});
+
+function checkInput(){
+    inputBoxInfo = document.getElementById('inputBox').value;
+  
+    if(inputBoxInfo.length == 2){
+      var bool1 = col_array.indexOf(inputBoxInfo.charAt(0)) != -1;
+      var bool2 = (Number(inputBoxInfo.charAt(1))>0 && Number(inputBoxInfo.charAt(1))<=8);
+      if(bool1 && bool2){
+        validInput = true;
+        var counter = 0;
+        if(avaliableMove('up')) {
+          document.getElementById('up').disabled = false;
+          counter++;
+        }
+        if(avaliableMove('left')) {
+          document.getElementById('left').disabled = false;
+          counter++;
+        }
+        if(avaliableMove('right')) {
+          document.getElementById('right').disabled = false;
+          counter++;
+        }
+        if(avaliableMove('down')) {
+          document.getElementById('down').disabled = false;
+          counter++;
+        }
+        if(counter>0)
+          return;
+      }
+    }
+    document.getElementById('inputBox').value = null;
+    document.getElementById('inputBox').focus();
+    document.getElementById('up').disabled = true;
+    document.getElementById('left').disabled = true;
+    document.getElementById('right').disabled = true;
+    document.getElementById('down').disabled = true;
+}
+
+$(document).on('focusout', "#inputBox", function(evt){
+  checkInput();
+});
+
+$(document).on('click', "#up", function(evt){
+  if(validInput) 
+    checkMove('up');
+});
+
+$(document).on('click', "#left", function(evt){
+  if(validInput) 
+    checkMove('left');
+});
+
+$(document).on('click', "#right", function(evt){
+  if(validInput) 
+    checkMove('right');
+});
+
+$(document).on('click', "#down", function(evt){
+  if(validInput) 
+    checkMove('down');
+});
+
+function avaliableMove(dir){
+  var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  var inputRow = Number(inputBoxInfo.charAt(1))-1;
+  var currCandy = board.getCandyAt(inputRow, inputCol);
+  var bool = rules.isMoveTypeValid(currCandy,dir);
+  return bool;
+}
+
+/* Add basic behaivor to gameplay
+* because this game is stupid
+*/
+function checkMove(dir){
+  var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  var inputRow = Number(inputBoxInfo.charAt(1))-1;
+  var currCandy = board.getCandyAt(inputRow, inputCol);
+  var bool = rules.isMoveTypeValid(currCandy,dir);
+
+  board.flipCandies(currCandy, board.getCandyInDirection(currCandy, dir));
+  $("#mainColumn").html(colorTable());
+    
+  document.getElementById('inputBox').value = null;
+  document.getElementById('inputBox').focus();
+  validInput = false;
+  document.getElementById('up').disabled = true;
+  document.getElementById('left').disabled = true;
+  document.getElementById('right').disabled = true;
+  document.getElementById('down').disabled = true;
+
+  document.getElementById('crusher').disabled = false;
+  document.getElementById('inputBox').disabled = true;
+}
+
+$(document).on('click', "#crusher", function(evt){
+    var listRemove = rules.getCandyCrushes();
+    rules.removeCrushes(listRemove);
+    $("#mainColumn").html(colorTable());
+    setTimeout(function(){ 
+      rules.moveCandiesDown();
+      $("#mainColumn").html(colorTable());
+      listRemove = rules.getCandyCrushes();
+      if(listRemove.length == 0) {
+        document.getElementById('crusher').disabled = true;
+        document.getElementById('inputBox').disabled = false;
+        document.getElementById('inputBox').focus();
+      }
+      else
+        document.getElementById('inputBox').disabled = true;
+    }, 500);
+});
+
+function load_img(imgToLoad) {
+    var loaded = false;
+    var counter = 0;
+    for( var i=0; i<imgToLoad.length; i++){
+        var img = new Image();
+        // console.log(imgToLoad.length);
+        img.onload = function() {
+            counter++;
+            //console.log(imgToLoad[i]);
+            // console.log(counter);
+            if(counter == imgToLoad.length){
+                loaded = true;
+                console.log(loaded);
+            }
+        }
+        img.src = imgToLoad[i];
+        // console.log(img.src);
+        img_array = img;
+        
+    }
+    // console.log(loaded);
+    // return img_array;
+}
+
+function drawBoard() {
+    
+    load_img(['./graphics/blue-candy.png', './graphics/blue-special.png', 
+                './graphics/green-candy.png', './graphics/green-special.png',
+                './graphics/orange-candy.png', './graphics/orange-special.png',
+                './graphics/purple-candy.png', './graphics/purple-special.png',
+                './graphics/red-candy.png', './graphics/red-special.png',
+                './graphics/yellow-candy.png', './graphics/color-bomb.png']);
+
+    var canvas = document.getElementById('Canvas');
+    ctx = canvas.getContext("2d");
+    var i = new Image();
+    i.src = './graphics/blue-candy.png';
+    // ctx.drawImage(i,10,10);
+    for(var row = 0; row < DEFAULT_BOARD_SIZE; row++){
+            for(var col = 0; col < DEFAULT_BOARD_SIZE; col++) {
+                var colorBack =  board.getCandyAt(row, col);
+                console.log(colorBack);
+                ctx.drawImage(document.getElementById('green-candy'), row, col, 10, 10);
+                ctx.drawImage(document.getElementById('orange-candy'),row, col, 20,10);
+                
+            }
+    }
+
+}
+
+</script>
+
+
+</head>
+
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-3 d-flex flex-column align-self-center" id="firstColumn">
+      <div class="p-2"><h2 class="text-center"><b>Candy Crush</b></h2></div>
+      <div class="p-2 text-center"><button class="btn newGameBtn" id="newGame">New Game</button></div>
+    </div>
+ 
+    <div class="col-md-6 d-flex flex-column mx-auto align-self-center" id="mainColumn">
+      <script language ="javascript"> rules.prepareNewGame();</script>
+      <canvas id ='Canvas' width='320' height='320' style ='border:2px solid #d3d3d3; width:320px;height:320px; z-index:-1;' >
+        Sorry browser doesn't support Canvas
+        <img id ='blue-candy' width='10' height='10' src ='./graphics/blue-candy.png'>
+        <img id ='green-candy' width='10' height='10' src ='./graphics/green-candy.png'>
+        <img id ='orange-candy' width='10' height='10' src ='./graphics/orange-candy.png'>
+        <img id ='red-candy' width='10' height='10' src ='./graphics/red-candy.png'>
+        <img id ='purple-candy' width='10' height='10' src ='./graphics/purple-candy.png'>
+        <img id ='yellow-candy' width='10' height='10' src ='./graphics/yellow-candy.png'>
+        <img id ='blue-special' width='10' height='10' src ='./graphics/blue-special.png'>
+        <img id ='green-special' width='10' height='10' src ='./graphics/green-special.png'>
+        <img id ='orange-special' width='10' height='10' src ='./graphics/orange-special.png'>
+        <img id ='red-special' width='10' height='10' src ='./graphics/red-special.png'>
+        <img id ='purple-special' width='10' height='10' src ='./graphics/purple-special.png'>
+        <img id ='bomb' width='10' height='10' src ='./graphics/color-bomb.png'>
+
+      </canvas>
+      <script>drawBoard();</script>
+
+      <!-- <script> 
+        window.onload = function(){
+          var canvas = document.getElementById("Canvas");
+          var ctx = canvas.getContext("2d");
+          var img = document.getElementById("blue-candy");
+          ctx.drawImage(img,200,10);
+        }   
+      </script>  -->
+      <!-- <script type="text/javascript">$("#mainColumn").html(colorTable());</script> -->
+      <!-- <script type ="text/javascript"> $("#mainColumn").html(drawBoard());</script> -->
+    </div>
+
+    <div class="col-md-3 d-flex flex-column align-self-center" id="lastColumn">
+      <div class="p-2 text-center">
+        <h2 class="">Move:</h2>
+        <input type="text" id="inputBox">
+      </div>
+  
+      <div class="p-2 text-center modP"> 
+        <button class="btn btnColor" id="up" disabled>&uarr;</button> 
+      </div>
+
+      <div class="p-2 text-center modP"> 
+        <button class="btn btnColor" id="left" style="margin-right: 20px;" disabled>&larr;</button>
+        <button class="btn btnColor" id="right"style="margin-left: 20px;" disabled>&rarr;</button>
+      </div>
+      
+      <div class="p-2 text-center modP">
+        <button class="btn btnColor" id="down" disabled>&darr;</button>
+      </div>
+      <div class="p-2 text-center">
+        <button class="btn btnColor"id="crusher" disabled>Crush Once</button>
+      </div>
+    </div>
+  </div> 
+</div>
+
+</body>
+
+</html>

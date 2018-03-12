@@ -1,0 +1,56 @@
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+
+#mainColumn {
+  margin-top: 10px;
+  height: 320px;
+  width: 320px;
+}
+
+#firstColumn {
+  color: red;
+}
+
+#lastColumn .p-2 h2 {
+  display: inline-block;
+}
+
+.tableBorder {
+  border: 2px solid lightgrey;
+
+}
+
+#inputBox {
+  width: 40px;
+  display: inline-block;
+}
+
+#lastColumn h2 {
+  display: inline-block;
+}
+
+.btn:disabled {
+  background-color: lightgrey;
+  color: black;
+}
+
+.btn {
+  color: black;
+  background-color: lightgreen;
+}
+
+.padCell {
+  padding: 5px 9px; 
+  height: 39px;
+  width: 39px;
+}
+
+.newGameBtn {
+  background-color: lightgrey;
+  color: black;
+}
+
+.modP {
+  margin: -10px;
+}
