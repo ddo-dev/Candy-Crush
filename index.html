@@ -70,6 +70,9 @@ var rules;
 var col_array = ["a","b","c","d","e","f","g","h"];
 var inputBoxInfo;
 var validInput = false;
+var image_array;
+
+
 
 // initialize board
 if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
@@ -247,6 +250,55 @@ $(document).on('click', "#crusher", function(evt){
     }, 500);
 });
 
+function load_img(imgToLoad) {
+    var loaded = false;
+    var counter = 0;
+    for( var i=0; i<imgToLoad.length; i++){
+        var img = new Image();
+        // console.log(imgToLoad.length);
+        img.onload = function() {
+            counter++;
+            //console.log(imgToLoad[i]);
+            // console.log(counter);
+            if(counter == imgToLoad.length){
+                loaded = true;
+                console.log(loaded);
+            }
+        }
+        img.src = imgToLoad[i];
+        // console.log(img.src);
+        img_array = img;
+        
+    }
+    // console.log(loaded);
+    // return img_array;
+}
+
+function drawBoard() {
+    
+    load_img(['./graphics/blue-candy.png', './graphics/blue-special.png', 
+                './graphics/green-candy.png', './graphics/green-special.png',
+                './graphics/orange-candy.png', './graphics/orange-special.png',
+                './graphics/purple-candy.png', './graphics/purple-special.png',
+                './graphics/red-candy.png', './graphics/red-special.png',
+                './graphics/yellow-candy.png', './graphics/color-bomb.png']);
+
+    var canvas = document.getElementById('Canvas');
+    ctx = canvas.getContext("2d");
+    var i = new Image();
+    i.src = './graphics/blue-candy.png';
+    // ctx.drawImage(i,10,10);
+    for(var row = 0; row < DEFAULT_BOARD_SIZE; row++){
+            for(var col = 0; col < DEFAULT_BOARD_SIZE; col++) {
+                var colorBack =  board.getCandyAt(row, col);
+                console.log(colorBack);
+                ctx.drawImage(document.getElementById('green-candy'), row, col, 10, 10);
+                ctx.drawImage(document.getElementById('orange-candy'),row, col, 20,10);
+                
+            }
+    }
+
+}
 
 </script>
 
@@ -264,7 +316,34 @@ $(document).on('click', "#crusher", function(evt){
  
     <div class="col-md-6 d-flex flex-column mx-auto align-self-center" id="mainColumn">
       <script language ="javascript"> rules.prepareNewGame();</script>
-      <script type="text/javascript">$("#mainColumn").html(colorTable());</script>
+      <canvas id ='Canvas' width='320' height='320' style ='border:2px solid #d3d3d3; width:320px;height:320px; z-index:-1;' >
+        Sorry browser doesn't support Canvas
+        <img id ='blue-candy' width='10' height='10' src ='./graphics/blue-candy.png'>
+        <img id ='green-candy' width='10' height='10' src ='./graphics/green-candy.png'>
+        <img id ='orange-candy' width='10' height='10' src ='./graphics/orange-candy.png'>
+        <img id ='red-candy' width='10' height='10' src ='./graphics/red-candy.png'>
+        <img id ='purple-candy' width='10' height='10' src ='./graphics/purple-candy.png'>
+        <img id ='yellow-candy' width='10' height='10' src ='./graphics/yellow-candy.png'>
+        <img id ='blue-special' width='10' height='10' src ='./graphics/blue-special.png'>
+        <img id ='green-special' width='10' height='10' src ='./graphics/green-special.png'>
+        <img id ='orange-special' width='10' height='10' src ='./graphics/orange-special.png'>
+        <img id ='red-special' width='10' height='10' src ='./graphics/red-special.png'>
+        <img id ='purple-special' width='10' height='10' src ='./graphics/purple-special.png'>
+        <img id ='bomb' width='10' height='10' src ='./graphics/color-bomb.png'>
+
+      </canvas>
+      <script>drawBoard();</script>
+
+      <!-- <script> 
+        window.onload = function(){
+          var canvas = document.getElementById("Canvas");
+          var ctx = canvas.getContext("2d");
+          var img = document.getElementById("blue-candy");
+          ctx.drawImage(img,200,10);
+        }   
+      </script>  -->
+      <!-- <script type="text/javascript">$("#mainColumn").html(colorTable());</script> -->
+      <!-- <script type ="text/javascript"> $("#mainColumn").html(drawBoard());</script> -->
     </div>
 
     <div class="col-md-3 d-flex flex-column align-self-center" id="lastColumn">
