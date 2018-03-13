@@ -23,6 +23,8 @@ function colorTable() {
                 }
                 tableInfo += "<td class='tableBorder padCell text-center' style='background-color:" + colorBack +";color:" 
                                 + textColor +"'>" + colName + (row+1)   +"</td>";
+                // console.log(tableInfo);
+                // console.log("         ");                
             }
         tableInfo += "</tr>";    
         // console.log(tableInfo);

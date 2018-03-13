@@ -324,6 +324,8 @@ var Board = function(size)
    */
   this.incrementScore = function(candy, row, col) {
     this.score += 1;
+    // console.log(this.score);
+
     $(this).triggerHandler("scoreUpdate", [{
       score: this.score,
       candy: candy,

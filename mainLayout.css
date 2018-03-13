@@ -12,6 +12,7 @@
   color: red;
 }
 
+
 #lastColumn .p-2 h2 {
   display: inline-block;
 }
@@ -20,6 +21,12 @@
   border: 2px solid lightgrey;
 
 }
+
+#score{
+  color:whitesmoke;
+  background-color: lightsalmon;
+}
+
 
 #inputBox {
   width: 40px;
@@ -53,4 +60,8 @@
 
 .modP {
   margin: -10px;
+}
+
+.helpBtn {
+  background-color: lavender;
 }
