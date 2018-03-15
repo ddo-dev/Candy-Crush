@@ -11,6 +11,10 @@ Collaborators: None
  */
 -->
 
+<!-- what needs to be done 
+ fix multiple crushes not crushing -->
+
+
 <head>
 <meta charset="utf-8">
 <title>CandyCrush</title>
@@ -67,7 +71,7 @@ var DEFAULT_BOARD_SIZE = 8;
 // data model at global scope for easier debugging
 var board;
 var rules;
-var col_array = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t"];
+var col_array = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 var inputBoxInfo;
 var validInput = false;
 var image_array;
@@ -112,6 +116,12 @@ $(board).on('move', function(e, info)
 $(board).on('remove', function(e, info)
 {
   // Your code here.
+  // var candy = info.candy;
+  // console.log('candy remved');
+  // // console.log(candy);
+  
+  // $('info').fadeOut('slow');
+  
 });
 
 // move a candy on the board
@@ -144,10 +154,10 @@ $(document).keypress(function(evt){
 
 function checkInput(){
     inputBoxInfo = document.getElementById('inputBox').value;
-  
-    if(inputBoxInfo.length == 2){
+    // console.log(inputBoxInfo.length);
+    if(inputBoxInfo.length <= 3){
       var bool1 = col_array.indexOf(inputBoxInfo.charAt(0)) != -1;
-      var bool2 = (Number(inputBoxInfo.charAt(1))>0 && Number(inputBoxInfo.charAt(1))<=8);
+      var bool2 = (Number(inputBoxInfo.charAt(1))>0 && Number(inputBoxInfo.charAt(1))<=20);
       if(bool1 && bool2){
         validInput = true;
         var counter = 0;
@@ -171,6 +181,7 @@ function checkInput(){
           return;
       }
     }
+    // console.log("hello");
     document.getElementById('inputBox').value = null;
     document.getElementById('inputBox').focus();
     document.getElementById('up').disabled = true;
@@ -179,9 +190,9 @@ function checkInput(){
     document.getElementById('down').disabled = true;
 }
 
-$(document).on('focusout', "#inputBox", function(evt){
-  checkInput();
-});
+// $(document).on('focusout', "#inputBox", function(evt){
+//   checkInput();
+// });
 
 $(document).on('click', "#up", function(evt){
   if(validInput) 
@@ -205,7 +216,13 @@ $(document).on('click', "#down", function(evt){
 
 function avaliableMove(dir){
   var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
-  var inputRow = Number(inputBoxInfo.charAt(1))-1;
+  var inputRow;
+  if(inputBoxInfo.length < 3)
+   inputRow = Number(inputBoxInfo.charAt(1))-1;
+  else {
+    var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+    inputRow = Number(temp) -1;
+  }
   var currCandy = board.getCandyAt(inputRow, inputCol);
   var bool = rules.isMoveTypeValid(currCandy,dir);
   return bool;
@@ -216,83 +233,415 @@ function avaliableMove(dir){
 */
 function checkMove(dir){
   var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
-  var inputRow = Number(inputBoxInfo.charAt(1))-1;
+  var inputRow;
+  if(inputBoxInfo.length < 3)
+   inputRow = Number(inputBoxInfo.charAt(1))-1;
+  else {
+    var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+    inputRow = Number(temp) -1;
+  }
   var currCandy = board.getCandyAt(inputRow, inputCol);
   var bool = rules.isMoveTypeValid(currCandy,dir);
-
-  board.flipCandies(currCandy, board.getCandyInDirection(currCandy, dir));
-  $("#mainColumn").html(drawBoard());
-    
-  document.getElementById('inputBox').value = null;
-  document.getElementById('inputBox').focus();
-  validInput = false;
-  document.getElementById('up').disabled = true;
-  document.getElementById('left').disabled = true;
-  document.getElementById('right').disabled = true;
-  document.getElementById('down').disabled = true;
-
-  document.getElementById('crusher').disabled = false;
-  document.getElementById('inputBox').disabled = true;
-}
-
-$(document).on('click', "#helpBtn", function(evt){
-  var helpMove = rules.getRandomValidMove();
-  console.log(helpMove.candy);
-  console.log(helpMove.direction);
+  var canvas = document.getElementById('Canvas');
+  ctxt = canvas.getContext('2d');
+  var candyTo = board.getCandyInDirection(currCandy, dir);
   var size = (320/board.getSize());
-  var canvas = document.getElementById("Canvas");
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(document.getElementById('blackarrow'), helpMove.candy.col*size, helpMove.candy.row*size, size/2, size/2);
-  // ctx.rotate(Math.Pi/2);
-  // ctx.translate(70,70);
-});
-
-$(document).on('click', "#crusher", function(evt){
-    var listRemove = rules.getCandyCrushes();
-    // console.log(listRemove);
-    var candy = listRemove[0][0];
-    // console.log(candy);
-    var colorChange = 'style=background-color:' + candy;
-    switch(colorChange){
-      case 'style=background-color:red':
-        document.getElementById('score').style.backgroundColor = 'red';
-        break;
-      case 'style=background-color:green':
-        document.getElementById('score').style.backgroundColor = 'green';
-        break;
-      case 'style=background-color:blue':
-        document.getElementById('score').style.backgroundColor = 'blue';
-        break;
-      case 'style=background-color:orange':
-        document.getElementById('score').style.backgroundColor = 'orange';
-        break;
-      case 'style=background-color:purple':
-        document.getElementById('score').style.backgroundColor = 'purple';
-        break;
-      case 'style=background-color:yellow':
-        document.getElementById('score').style.backgroundColor = 'yellow';
-        break;
+  // ctxt.fillRect(10, 10, 320, 320);
+  var clearWidth, clearHeight;
+  // currCandy.color;
+  // ctxt.fillRect(currCandy.col*size, currCandy.row*size, clearWidth, clearHeight);
+  var destRow, destCol, originRow, originCol;
+  
+  if(dir == 'right' || dir == 'left'){
+    clearWidth = size*2;
+    clearHeight = size;
+    var originColor, destColor;
+    if(currCandy.col > candyTo.col){
+      destCol = currCandy.col*size;
+      originCol = candyTo.col*size;
+      originColor = candyTo.color;
+      destColor = currCandy.color;
     }
+    else{
+      destCol = candyTo.col*size;
+      originCol = currCandy.col*size;
+      originColor = currCandy.color;
+      destColor= candyTo.color;
+    }
+    destRow = candyTo.row*size;
+    originRow = currCandy.row*size;
+    var timer = 0;
+  // console.log('before timeout');
+    var inter = setInterval(function(){
+      console.log('switching here');
+      ctxt.clearRect(originCol, originRow, clearWidth, clearHeight);
+  
+      ctxt.drawImage(document.getElementById(originColor + '-candy'), originCol+timer*size/20, originRow, size, size);
+      ctxt.drawImage(document.getElementById(destColor + '-candy'), destCol-timer*size/20, destRow, size, size);
+    
+    timer++;
+    console.log(timer);
+    if(timer == 21)
+      clearInterval(inter);
+    }, 10);
+  }
+  else{
+    clearWidth = size;
+    clearHeight = size*2;
+    if(currCandy.row > candyTo.row){
+      destRow = currCandy.row*size;
+      originRow = candyTo.row*size;
+      originColor = candyTo.color;
+      destColor = currCandy.color;
+    }
+    else{
+      destRow = candyTo.row*size;
+      originRow = currCandy.row*size;
+      originColor = currCandy.color;
+      destColor= candyTo.color;
+    }
+    destCol = candyTo.col*size;
+    originCol = currCandy.col*size;
+    var timer = 0;
+
+    var inter = setInterval(function(){
+      // console.log('switching up/down');
+      // console.log(clearHeight);
+      // console.log('origin:' + originCol + originRow);
+      // console.log('dest:' + destCol + destRow);
+      
+      ctxt.clearRect(originCol, originRow, clearWidth, clearHeight);
+      ctxt.drawImage(document.getElementById(originColor + '-candy'), originCol, originRow+timer*size/20, size, size);
+      ctxt.drawImage(document.getElementById(destColor + '-candy'), destCol, destRow-timer*size/20, size, size);
+    
+  
+    timer++;
+    console.log(timer);
+    if(timer == 21)
+      clearInterval(inter);
+    }, 10);
+  }
+
+
+  setTimeout(function(){
+    board.flipCandies(currCandy, board.getCandyInDirection(currCandy, dir));
+  
+    // ctxt.clearRect(0, 0, canvas.width, canvas.height);
+    $("#mainColumn").html(drawBoard());
+      
+    document.getElementById('inputBox').value = null;
+    document.getElementById('inputBox').focus();
+    validInput = false;
+    document.getElementById('up').disabled = true;
+    document.getElementById('left').disabled = true;
+    document.getElementById('right').disabled = true;
+    document.getElementById('down').disabled = true;
+
+    document.getElementById('crusher').disabled = false;
+    document.getElementById('inputBox').disabled = true;
+    while(true){
+      // console.log(crushcrush());
+      // var crushList = crushcrush();
+
+      // getAllCandy(crushList);
+      // console.log(crushList);
+      // if(crushList==null)
+        // break;
+      
+
+      var listRemove = rules.getCandyCrushes();
+    console.log(listRemove);
+    // getAllCandy(listRemove);
+    if(listRemove.length != 0){
+      var candy = listRemove[0][0];
+      // console.log(candy);
+      var colorChange = 'style=background-color:' + candy;
+      switch(colorChange){
+        case 'style=background-color:red':
+          document.getElementById('score').style.backgroundColor = 'red';
+          break;
+        case 'style=background-color:green':
+          document.getElementById('score').style.backgroundColor = 'green';
+          break;
+        case 'style=background-color:blue':
+          document.getElementById('score').style.backgroundColor = 'blue';
+          break;
+        case 'style=background-color:orange':
+          document.getElementById('score').style.backgroundColor = 'orange';
+          break;
+        case 'style=background-color:purple':
+          document.getElementById('score').style.backgroundColor = 'purple';
+          break;
+        case 'style=background-color:yellow':
+          document.getElementById('score').style.backgroundColor = 'yellow';
+          break;
+      }
+    }
+    
     
     // console.log(colorChange);
     rules.removeCrushes(listRemove);
     
     $("#mainColumn").html(drawBoard());
-   
-    setTimeout(function(){ 
+    // var timer = 0;
+    var inter = setInterval(function(){
+      timer++;
+
+      // ctx.drawImage(img,200,10);
       rules.moveCandiesDown();
+
       $("#mainColumn").html(drawBoard());
+
+    //   if(timer == 1)
+    //     clearInterval(inter);
+    }, 300);
+    
       listRemove = rules.getCandyCrushes();
       if(listRemove.length == 0) {
         document.getElementById('crusher').disabled = true;
         document.getElementById('inputBox').disabled = false;
         document.getElementById('inputBox').focus();
+        // console.log('false');
+        break;
       }
-      else
+      else {
         document.getElementById('inputBox').disabled = true;
-    }, 500);
+        // console.log('true');
+        // return listRemove;
+      }
+    }
+  },230);
+  
+  
+}
+
+function getAllCandy(crushList){
+  var candies = [];
+  console.log(crushList);
+  for(var i=0; i<crushList.length; i++){
+        for(var j=0; j<crushList[i].length; j++){
+          // console.log(crushList[i][j]);
+          // candies.push(crushList[i][j]);
+          console.log(candies);
+          // faceCandy.animate()
+        }
+  }
+  // console.log(candies);
+}
+
+function crushcrush(){
+  var listRemove = rules.getCandyCrushes();
+    console.log(listRemove);
+    // getAllCandy(listRemove);
+    if(listRemove.length != 0){
+      var candy = listRemove[0][0];
+      // console.log(candy);
+      var colorChange = 'style=background-color:' + candy;
+      switch(colorChange){
+        case 'style=background-color:red':
+          document.getElementById('score').style.backgroundColor = 'red';
+          break;
+        case 'style=background-color:green':
+          document.getElementById('score').style.backgroundColor = 'green';
+          break;
+        case 'style=background-color:blue':
+          document.getElementById('score').style.backgroundColor = 'blue';
+          break;
+        case 'style=background-color:orange':
+          document.getElementById('score').style.backgroundColor = 'orange';
+          break;
+        case 'style=background-color:purple':
+          document.getElementById('score').style.backgroundColor = 'purple';
+          break;
+        case 'style=background-color:yellow':
+          document.getElementById('score').style.backgroundColor = 'yellow';
+          break;
+      }
+    }
     
+    
+    // console.log(colorChange);
+    rules.removeCrushes(listRemove);
+    
+    $("#mainColumn").html(drawBoard());
+    // var timer = 0;
+    // var inter = setInterval(function(){
+    //   timer++;
+
+      // ctx.drawImage(img,200,10);
+      rules.moveCandiesDown();
+
+      $("#mainColumn").html(drawBoard());
+
+    //   if(timer == 1)
+    //     clearInterval(inter);
+    // }, 300);
+    
+      listRemove = rules.getCandyCrushes();
+      if(listRemove.length == 0) {
+        document.getElementById('crusher').disabled = true;
+        document.getElementById('inputBox').disabled = false;
+        document.getElementById('inputBox').focus();
+        // console.log('false');
+        return null;
+      }
+      else {
+        document.getElementById('inputBox').disabled = true;
+        // console.log('true');
+        return listRemove;
+      }
+    
+}
+
+
+$(document).on('click', "#helpBtn", function(evt){
+  var helpMove = rules.getRandomValidMove();
+  // console.log(helpMove.candy);
+  // console.log(helpMove.direction);
+  var size = (320/board.getSize());
+  var canvas = document.getElementById("Canvas");
+  var ctx2 = canvas.getContext('2d');
+  ctx2.beginPath();
+  posY = (helpMove.candy.row + 1) * size;
+  posX = helpMove.candy.col*size;
+  ctx2.strokeStyle='black';
+  var arrowSize = size/4;
+  // console.log(arrowSize);
+  
+  switch(helpMove.direction) {
+    case 'right':
+      // ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      $("#mainColumn").html(drawBoard());
+      posX = posX + size*1.2;
+      posY = posY - (size/2);
+      ctx2.moveTo(posX, posY);
+      ctx2.lineTo(posX - arrowSize, posY - arrowSize);
+      ctx2.lineTo(posX - arrowSize, posY + arrowSize);
+      ctx2.fill();
+      ctx2.rect(posX-arrowSize*2, posY-arrowSize/2, arrowSize, arrowSize);
+      ctx2.fill();
+      break;
+    case 'left':
+      // ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      $("#mainColumn").html(drawBoard());
+      posX = posX - size/4;
+      posY = posY - size/2;
+      ctx2.moveTo(posX, posY);
+      ctx2.lineTo(posX + arrowSize, posY + arrowSize);
+      ctx2.lineTo(posX + arrowSize, posY - arrowSize);
+      ctx2.fill();
+      ctx2.rect(posX+arrowSize, posY-arrowSize/2, arrowSize, arrowSize);
+      ctx2.fill();
+      break;
+    case 'up':
+      // ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      $("#mainColumn").html(drawBoard());
+      posY = posY - (size*1.2);
+      posX = posX + (size/2);
+      ctx2.moveTo(posX, posY);
+      ctx2.lineTo(posX - arrowSize, posY + arrowSize);
+      ctx2.lineTo(posX + arrowSize, posY + arrowSize);
+      ctx2.fill();
+      ctx2.rect(posX-arrowSize/2, posY+arrowSize, arrowSize, arrowSize);
+      ctx2.fill();
+      break;
+    case 'down':
+      // ctx2.clearRect(0, 0, canvas.width, canvas.height);
+      $("#mainColumn").html(drawBoard());
+      posY = posY + (size/4);
+      posX = posX + (size/2);
+      ctx2.moveTo(posX, posY);
+      ctx2.lineTo(posX + arrowSize, posY - arrowSize);
+      ctx2.lineTo(posX - arrowSize, posY - arrowSize);
+      ctx2.fill();
+      ctx2.rect(posX-arrowSize/2, posY-arrowSize*2, arrowSize, arrowSize);
+      ctx2.fill();
+      break;
+  }
+  ctx2.closePath();
+
 });
+
+// $(document).on('click', "#crusher", function(evt){
+//     var listRemove = rules.getCandyCrushes();
+//     // console.log(listRemove);
+//     var candy = listRemove[0][0];
+//     // console.log(candy);
+//     var colorChange = 'style=background-color:' + candy;
+//     switch(colorChange){
+//       case 'style=background-color:red':
+//         document.getElementById('score').style.backgroundColor = 'red';
+//         break;
+//       case 'style=background-color:green':
+//         document.getElementById('score').style.backgroundColor = 'green';
+//         break;
+//       case 'style=background-color:blue':
+//         document.getElementById('score').style.backgroundColor = 'blue';
+//         break;
+//       case 'style=background-color:orange':
+//         document.getElementById('score').style.backgroundColor = 'orange';
+//         break;
+//       case 'style=background-color:purple':
+//         document.getElementById('score').style.backgroundColor = 'purple';
+//         break;
+//       case 'style=background-color:yellow':
+//         document.getElementById('score').style.backgroundColor = 'yellow';
+//         break;
+//     }
+    
+//     // console.log(colorChange);
+//     rules.removeCrushes(listRemove);
+    
+//     $("#mainColumn").html(drawBoard());
+   
+//     setTimeout(function(){ 
+//       rules.moveCandiesDown();
+//       $("#mainColumn").html(drawBoard());
+//       listRemove = rules.getCandyCrushes();
+//       if(listRemove.length == 0) {
+//         document.getElementById('crusher').disabled = true;
+//         document.getElementById('inputBox').disabled = false;
+//         document.getElementById('inputBox').focus();
+//       }
+//       else
+//         document.getElementById('inputBox').disabled = true;
+//     }, 500);
+    
+// });
+
+
+function getCanvasPos(evt) {
+  var canvasRect = document.getElementById('Canvas').getBoundingClientRect();
+
+  //Get relative position on canvas
+  var xPos = (evt.clientX - canvasRect.left);
+  var yPos = (evt.clientY - canvasRect.top);
+  
+  //Get coordinate
+  var size = 320/BOARD_SIZE;
+  yPos = Math.floor((yPos / size)) + 1;
+  xPos = Math.floor((xPos / size));
+  xPos = col_array[xPos];
+
+  // console.log({ col: xPos, row: yPos});
+  return xPos + yPos;
+}
+
+$(document).on('click', "#Canvas", function(evt) {
+  var location = getCanvasPos(evt);
+  // console.log(location);
+  clearMoves();
+  $("#mainColumn").html(drawBoard());
+  document.getElementById('inputBox').value = location;
+  checkInput(); //Once click it will check for possible moves
+});
+
+function clearMoves() {
+  document.getElementById('left').disabled = true;
+  document.getElementById('right').disabled = true;
+  document.getElementById('up').disabled = true;
+  document.getElementById('down').disabled = true;
+}
 
 function load_img(imgToLoad) {
     var loaded = false;
@@ -335,39 +684,50 @@ function drawBoard() {
     var canvas = document.getElementById('Canvas');
     ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ctx.strokeRect(0,0, canvas.width, canvas.height);
+    ctx.strokeStyle="lightgrey";
     
-    for(var row = 0; row < BOARD_SIZE; row++){
-            for(var col = 0; col < BOARD_SIZE; col++) {
-                var colorBack =  board.getCandyAt(row, col);
-                var color = "style=background-color:" + colorBack;
-                
-                switch(color) {
-                  case 'style=background-color:red':
-                    ctx.drawImage(document.getElementById('red-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                  case 'style=background-color:green':
-                    ctx.drawImage(document.getElementById('green-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                  case 'style=background-color:blue':
-                    ctx.drawImage(document.getElementById('blue-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                  case 'style=background-color:orange':
-                    ctx.drawImage(document.getElementById('orange-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                  case 'style=background-color:purple':
-                    ctx.drawImage(document.getElementById('purple-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                  case 'style=background-color:yellow':
-                    ctx.drawImage(document.getElementById('yellow-candy'), col*size, row*size, candyWidth, candyHeight);
-                    break;
-                }
-                // ctx.drawImage(document.getElementById('green-candy'), row, col, (320/8), (320/8));
-                // ctx.drawImage(document.getElementById('orange-candy'),row, col, 20,10);
-                
-            }
-    }
 
+    for(var row = 0; row < BOARD_SIZE; row++){
+      for(var col = 0; col < BOARD_SIZE; col++) {
+          var colorBack =  board.getCandyAt(row, col);
+          var color = "style=background-color:" + colorBack;
+          
+          switch(color) {
+            case 'style=background-color:red':
+              ctx.drawImage(document.getElementById('red-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'style=background-color:green':
+              ctx.drawImage(document.getElementById('green-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'style=background-color:blue':
+              ctx.drawImage(document.getElementById('blue-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'style=background-color:orange':
+              ctx.drawImage(document.getElementById('orange-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'style=background-color:purple':
+              ctx.drawImage(document.getElementById('purple-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'style=background-color:yellow':
+              ctx.drawImage(document.getElementById('yellow-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+          }
+          // ctx.drawImage(document.getElementById('green-candy'), row, col, (320/8), (320/8));
+          // ctx.drawImage(document.getElementById('orange-candy'),row, col, 20,10);
+      }
+    }
+  var canvas2 = document.getElementById('candyCanvas1');
+  cntxt = canvas2.getContext('2d');
+  cntxt.fillRect(0,0,200,200);
 }
+
 
 </script>
 
@@ -385,9 +745,10 @@ function drawBoard() {
       <div class="p-2 text-center"><button class="btn helpBtn" id="helpBtn">Show Help</button></div>
     </div>
  
-    <div class="col-md-6 d-flex flex-column mx-auto align-self-center" id="mainColumn">
+    <div class="col-md-6 d-flex flex-column mx-auto align-self-center" id="mainColumn" style='position:relative'>
       <script language ="javascript"> rules.prepareNewGame();</script>
-      <canvas class ="d-flex-column mx-auto align-self-center" id ='Canvas' width='320' height='320' style ='border:2px solid #d3d3d3; width:320px;height:320px; z-index:-1;' >
+      <!-- <canvas class ="d-flex-column mx-auto align-self-center" id ='Canvas' width='320' height='320' style ='border:2px solid #d3d3d3; width:320px;height:320px; z-index:-1;' > -->
+      <canvas class ="d-flex-column align-self-center" id ='Canvas' width='320' height='320' style:'z-index:-1; position:absolute;'>
         Sorry browser doesn't support Canvas
         <img id ='blue-candy'  src ='./graphics/blue-candy.png'>
         <img id ='green-candy'  src ='./graphics/green-candy.png'>
@@ -401,8 +762,9 @@ function drawBoard() {
         <img id ='red-special'  src ='./graphics/red-special.png'>
         <img id ='purple-special'  src ='./graphics/purple-special.png'>
         <img id ='bomb'  src ='./graphics/color-bomb.png'>
-        <img id ='arrow' src ='./graphics/forward_grey.png'>
-        <img id ='blackarrow' src ='./graphics/black-arrow.png'>
+        <canvas  id ='candyCanvas1' width='320' height='320' style='z-index:40; border:2px solid black; position:absolute;'></canvas>
+        <canvas class ="d-flex-column align-self-center" id ='candyCanvas2' width='320' height='320' style='z-index:80'></canvas>
+
       </canvas>
       <script>drawBoard();</script>
       <script language ='javascript'>board.resetScore();</script>
@@ -439,7 +801,7 @@ function drawBoard() {
         <button class="btn btnColor" id="down" disabled>&darr;</button>
       </div>
       <div class="p-2 text-center">
-        <button class="btn btnColor"id="crusher" disabled>Crush Once</button>
+        <button class="btn btnColor"id="crusher" disabled style= 'display: none'>Crush Once</button>
       </div>
     </div>
   </div> 
