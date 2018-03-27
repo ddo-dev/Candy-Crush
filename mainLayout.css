@@ -6,17 +6,28 @@
   margin-top: 10px;
   height: 320px;
   width: 320px;
-    border: 2px solid black;
+    /* border: 2px solid black; */
 }
 
 #firstColumn {
   color: red;
 }
 
-
-#lastColumn .p-2 h2 {
-  display: inline-block;
+#lastColumn{
+  display: none;
+  visibility: hidden;
 }
+
+#invalid {
+  visibility: hidden;
+  color: red;
+  font-size: 2em;
+  font-weight: bolder;
+}
+/* #lastColumn .p-2 h2 {
+  display: inline-block;
+  
+} */
 
 .tableBorder {
   /* border: 2px solid lightgrey; */

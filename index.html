@@ -11,10 +11,6 @@ Collaborators: None
  */
 -->
 
-<!-- what needs to be done 
- fix multiple crushes not crushing -->
-
-
 <head>
 <meta charset="utf-8">
 <title>CandyCrush</title>
@@ -76,6 +72,9 @@ var inputBoxInfo;
 var validInput = false;
 var image_array;
 var BOARD_SIZE;
+var globalCrushCounter = true;
+var mouseDownLocation;
+var mouseUpLocation;
 
 // initialize board
 if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
@@ -215,12 +214,25 @@ $(document).on('click', "#down", function(evt){
 });
 
 function avaliableMove(dir){
-  var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  //old implementation
+  // var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  // var inputRow;
+  // if(inputBoxInfo.length < 3)
+  //  inputRow = Number(inputBoxInfo.charAt(1))-1;
+  // else {
+  //   var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+  //   inputRow = Number(temp) -1;
+  // }
+  // var currCandy = board.getCandyAt(inputRow, inputCol);
+  // var bool = rules.isMoveTypeValid(currCandy,dir);
+  // return bool;
+
+  var inputCol = col_array.indexOf(mouseDownLocation.charAt(0));
   var inputRow;
-  if(inputBoxInfo.length < 3)
-   inputRow = Number(inputBoxInfo.charAt(1))-1;
+  if(mouseDownLocation.length < 3)
+   inputRow = Number(mouseDownLocation.charAt(1))-1;
   else {
-    var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+    var temp = mouseDownLocation.charAt(1) + mouseDownLocation.charAt(2);
     inputRow = Number(temp) -1;
   }
   var currCandy = board.getCandyAt(inputRow, inputCol);
@@ -232,12 +244,22 @@ function avaliableMove(dir){
 * because this game is stupid
 */
 function checkMove(dir){
-  var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  // var inputCol = col_array.indexOf(inputBoxInfo.charAt(0));
+  // var inputRow;
+  // if(inputBoxInfo.length < 3)
+  //  inputRow = Number(inputBoxInfo.charAt(1))-1;
+  // else {
+  //   var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+  //   inputRow = Number(temp) -1;
+  // }
+  console.log(mouseDownLocation);
+  console.log(mouseUpLocation);
   var inputRow;
-  if(inputBoxInfo.length < 3)
-   inputRow = Number(inputBoxInfo.charAt(1))-1;
+  var inputCol = col_array.indexOf(mouseDownLocation.charAt(0));
+  if(mouseDownLocation.length < 3)
+   inputRow = Number(mouseDownLocation.charAt(1))-1;
   else {
-    var temp = inputBoxInfo.charAt(1) + inputBoxInfo.charAt(2);
+    var temp = mouseDownLocation.charAt(1) + mouseDownLocation.charAt(2);
     inputRow = Number(temp) -1;
   }
   var currCandy = board.getCandyAt(inputRow, inputCol);
@@ -246,10 +268,9 @@ function checkMove(dir){
   ctxt = canvas.getContext('2d');
   var candyTo = board.getCandyInDirection(currCandy, dir);
   var size = (320/board.getSize());
-  // ctxt.fillRect(10, 10, 320, 320);
+
   var clearWidth, clearHeight;
-  // currCandy.color;
-  // ctxt.fillRect(currCandy.col*size, currCandy.row*size, clearWidth, clearHeight);
+ 
   var destRow, destCol, originRow, originCol;
   
   if(dir == 'right' || dir == 'left'){
@@ -271,20 +292,23 @@ function checkMove(dir){
     destRow = candyTo.row*size;
     originRow = currCandy.row*size;
     var timer = 0;
-  // console.log('before timeout');
-    var inter = setInterval(function(){
-      console.log('switching here');
-      ctxt.clearRect(originCol, originRow, clearWidth, clearHeight);
   
+    var inter = setInterval(function(){
+      // console.log('switching here');
+      ctxt.clearRect(originCol, originRow, clearWidth, clearHeight);
+      
       ctxt.drawImage(document.getElementById(originColor + '-candy'), originCol+timer*size/20, originRow, size, size);
       ctxt.drawImage(document.getElementById(destColor + '-candy'), destCol-timer*size/20, destRow, size, size);
     
-    timer++;
-    console.log(timer);
-    if(timer == 21)
-      clearInterval(inter);
+      timer++;
+      // console.log(timer);
+      if(timer == 21){
+        clearInterval(inter);
+        flipAndDraw(currCandy, dir);
+      }
     }, 10);
   }
+
   else{
     clearWidth = size;
     clearHeight = size*2;
@@ -304,30 +328,32 @@ function checkMove(dir){
     originCol = currCandy.col*size;
     var timer = 0;
 
-    var inter = setInterval(function(){
-      // console.log('switching up/down');
-      // console.log(clearHeight);
-      // console.log('origin:' + originCol + originRow);
-      // console.log('dest:' + destCol + destRow);
-      
+    var inter = setInterval(function(){  
       ctxt.clearRect(originCol, originRow, clearWidth, clearHeight);
+      
       ctxt.drawImage(document.getElementById(originColor + '-candy'), originCol, originRow+timer*size/20, size, size);
       ctxt.drawImage(document.getElementById(destColor + '-candy'), destCol, destRow-timer*size/20, size, size);
-    
-  
-    timer++;
-    console.log(timer);
-    if(timer == 21)
-      clearInterval(inter);
+     
+      timer++;
+
+    // console.log(timer);
+      if(timer == 21){
+        clearInterval(inter);
+        flipAndDraw(currCandy, dir);
+      }
+      
     }, 10);
   }
+  
+}
 
-
-  setTimeout(function(){
+function flipAndDraw(currCandy, dir){
+  // console.log(currCandy);
     board.flipCandies(currCandy, board.getCandyInDirection(currCandy, dir));
   
     // ctxt.clearRect(0, 0, canvas.width, canvas.height);
     $("#mainColumn").html(drawBoard());
+    
       
     document.getElementById('inputBox').value = null;
     document.getElementById('inputBox').focus();
@@ -336,107 +362,102 @@ function checkMove(dir){
     document.getElementById('left').disabled = true;
     document.getElementById('right').disabled = true;
     document.getElementById('down').disabled = true;
-
     document.getElementById('crusher').disabled = false;
     document.getElementById('inputBox').disabled = true;
-    while(true){
-      // console.log(crushcrush());
-      // var crushList = crushcrush();
+    document.getElementById('Canvas').style.pointerEvents = 'none';
+    document.getElementById('helpBtn').disabled = true;
+ 
+    var counter = true;
+    crushcrush();
 
-      // getAllCandy(crushList);
-      // console.log(crushList);
-      // if(crushList==null)
-        // break;
-      
-
-      var listRemove = rules.getCandyCrushes();
-    console.log(listRemove);
-    // getAllCandy(listRemove);
-    if(listRemove.length != 0){
-      var candy = listRemove[0][0];
-      // console.log(candy);
-      var colorChange = 'style=background-color:' + candy;
-      switch(colorChange){
-        case 'style=background-color:red':
-          document.getElementById('score').style.backgroundColor = 'red';
-          break;
-        case 'style=background-color:green':
-          document.getElementById('score').style.backgroundColor = 'green';
-          break;
-        case 'style=background-color:blue':
-          document.getElementById('score').style.backgroundColor = 'blue';
-          break;
-        case 'style=background-color:orange':
-          document.getElementById('score').style.backgroundColor = 'orange';
-          break;
-        case 'style=background-color:purple':
-          document.getElementById('score').style.backgroundColor = 'purple';
-          break;
-        case 'style=background-color:yellow':
-          document.getElementById('score').style.backgroundColor = 'yellow';
-          break;
-      }
+  var gg = setInterval(function(){
+    // console.log(counter);
+    if(globalCrushCounter == true){
+      // console.log(globalCrushCounter);
+      crushcrush();
     }
-    
-    
-    // console.log(colorChange);
-    rules.removeCrushes(listRemove);
-    
-    $("#mainColumn").html(drawBoard());
-    // var timer = 0;
-    var inter = setInterval(function(){
-      timer++;
+    else{
+      clearInterval(gg);
+      document.getElementById('Canvas').style.pointerEvents = 'auto';
+      document.getElementById('helpBtn').disabled = false;
 
-      // ctx.drawImage(img,200,10);
-      rules.moveCandiesDown();
-
-      $("#mainColumn").html(drawBoard());
-
-    //   if(timer == 1)
-    //     clearInterval(inter);
-    }, 300);
-    
-      listRemove = rules.getCandyCrushes();
-      if(listRemove.length == 0) {
-        document.getElementById('crusher').disabled = true;
-        document.getElementById('inputBox').disabled = false;
-        document.getElementById('inputBox').focus();
-        // console.log('false');
-        break;
-      }
-      else {
-        document.getElementById('inputBox').disabled = true;
-        // console.log('true');
-        // return listRemove;
-      }
     }
-  },230);
-  
-  
-}
-
-function getAllCandy(crushList){
-  var candies = [];
-  console.log(crushList);
-  for(var i=0; i<crushList.length; i++){
-        for(var j=0; j<crushList[i].length; j++){
-          // console.log(crushList[i][j]);
-          // candies.push(crushList[i][j]);
-          console.log(candies);
-          // faceCandy.animate()
-        }
-  }
-  // console.log(candies);
+  },1100);
 }
 
 function crushcrush(){
+  
   var listRemove = rules.getCandyCrushes();
-    console.log(listRemove);
-    // getAllCandy(listRemove);
-    if(listRemove.length != 0){
-      var candy = listRemove[0][0];
-      // console.log(candy);
-      var colorChange = 'style=background-color:' + candy;
+  var canvas = document.getElementById("Canvas");
+  var cxt = canvas.getContext('2d');
+  var size = (320/board.getSize());
+  var alphaCounter = 10;
+  if(listRemove.length != 0){
+   
+    var numCrush = listRemove.length;
+    var crushLength = listRemove[0].length;
+    
+    var alpha = setInterval(function(){
+      alphaCounter = alphaCounter - 1;
+      cxt.globalAlpha = alphaCounter/10;
+      // console.log(alphaCounter/10);
+      for(var i = 0; i < numCrush; i++){
+        for(var j = 0; j < crushLength; j++){
+          var color = String(listRemove[i][j].color) + '-candy'; 
+          var scoreColor = listRemove[i][j].color;
+          ctx.clearRect(listRemove[i][j].col*size, listRemove[i][j].row*size, size, size);
+          cxt.drawImage(document.getElementById(color), listRemove[i][j].col*size, listRemove[i][j].row*size, size, size);
+        }
+      }
+      changeColor(scoreColor);
+      if(alphaCounter <= 0){
+        clearInterval(alpha);
+        // console.log('alpha cleared');
+      }
+    }, 50);
+    
+  }
+  
+  setTimeout(function(){
+    ctx.globalAlpha = 1.0;
+    rules.removeCrushes(listRemove);
+
+    $("#mainColumn").html(drawBoard());
+    rules.moveCandiesDown();
+
+    $("#mainColumn").html(drawBoard());
+
+
+    listRemove = rules.getCandyCrushes();
+    if(listRemove.length == 0) {
+      document.getElementById('crusher').disabled = true;
+      document.getElementById('inputBox').disabled = false;
+      document.getElementById('inputBox').focus();
+      // console.log('crush false');
+      globalCrushCounter = false;
+    }
+
+    else {
+      document.getElementById('inputBox').disabled = true;
+      // console.log('crush true');
+      globalCrushCounter = true;
+    }
+  },550);
+  
+
+}
+function getAllCandy(crushList){
+  var candies = [];
+  // console.log(crushList);
+  for(var i=0; i<crushList.length; i++){
+        for(var j=0; j<crushList[i].length; j++){
+          // console.log(candies);
+        }
+  }
+}
+
+function changeColor(candy){
+  var colorChange = 'style=background-color:' + candy;
       switch(colorChange){
         case 'style=background-color:red':
           document.getElementById('score').style.backgroundColor = 'red';
@@ -457,40 +478,35 @@ function crushcrush(){
           document.getElementById('score').style.backgroundColor = 'yellow';
           break;
       }
-    }
-    
-    
-    // console.log(colorChange);
-    rules.removeCrushes(listRemove);
-    
-    $("#mainColumn").html(drawBoard());
-    // var timer = 0;
-    // var inter = setInterval(function(){
-    //   timer++;
+}
 
-      // ctx.drawImage(img,200,10);
-      rules.moveCandiesDown();
-
-      $("#mainColumn").html(drawBoard());
-
-    //   if(timer == 1)
-    //     clearInterval(inter);
-    // }, 300);
-    
-      listRemove = rules.getCandyCrushes();
-      if(listRemove.length == 0) {
-        document.getElementById('crusher').disabled = true;
-        document.getElementById('inputBox').disabled = false;
-        document.getElementById('inputBox').focus();
-        // console.log('false');
-        return null;
-      }
-      else {
-        document.getElementById('inputBox').disabled = true;
-        // console.log('true');
-        return listRemove;
-      }
-    
+function drawCandy(row, col, size, color){
+  switch(color) {
+            case 'red':
+              ctx.drawImage(document.getElementById('red-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'green':
+              ctx.drawImage(document.getElementById('green-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'blue':
+              ctx.drawImage(document.getElementById('blue-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'orange':
+              ctx.drawImage(document.getElementById('orange-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'purple':
+              ctx.drawImage(document.getElementById('purple-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+            case 'yellow':
+              ctx.drawImage(document.getElementById('yellow-candy'), col*size, row*size, candyWidth, candyHeight);
+              ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              break;
+          }
 }
 
 
@@ -627,15 +643,94 @@ function getCanvasPos(evt) {
   return xPos + yPos;
 }
 
-$(document).on('click', "#Canvas", function(evt) {
-  var location = getCanvasPos(evt);
-  // console.log(location);
-  clearMoves();
-  $("#mainColumn").html(drawBoard());
-  document.getElementById('inputBox').value = location;
-  checkInput(); //Once click it will check for possible moves
+$(document).on('mousedown', '#Canvas', function(evt){
+  console.log('mousedown');
+  mouseDownLocation = getCanvasPos(evt);
+  console.log('mousedown: ' + mouseDownLocation);
+
+  document.getElementById('inputBox').value = mouseDownLocation;
 });
 
+$(document).on('mouseup', '#Canvas', function(evt){
+  console.log('mouseup');
+  mouseUpLocation = getCanvasPos(evt);
+  console.log('mouseUp: ' + mouseUpLocation);
+  clearMoves();
+  $("#mainColumn").html(drawBoard());
+  
+  checkDrag();
+});
+
+$(document).on('mousemove', '#Canvas', function(evt){
+  console.log('mousemove');
+});
+
+$(document).on('mouseout', '#Canvas', function(evt){
+  console.log('mouseout');
+});
+
+
+// $(document).on('click', "#Canvas", function(evt) {
+//   var location = getCanvasPos(evt);
+//   // console.log(location);
+//   clearMoves();
+//   $("#mainColumn").html(drawBoard());
+//   document.getElementById('inputBox').value = location;
+//   checkInput(); //Once click it will check for possible moves
+// });
+
+function checkDrag() {
+  var originCol = col_array.indexOf(mouseDownLocation.charAt(0));
+  var destCol = col_array.indexOf(mouseUpLocation.charAt(0));
+  var spliceSize = BOARD_SIZE > 9 ? 2 : 1;
+  var originRow = mouseDownLocation.substr(1, spliceSize);
+  var destRow = mouseUpLocation.substr(1, spliceSize);
+  // console.log(originRow);
+  // console.log(destRow);
+  // console.log(mouseDownLocation);
+  // console.log(mouseUpLocation);
+  // console.log(originCol);
+  // console.log(destCol);
+  if(originCol == destCol){
+    //moving up or down
+    if(originRow < destRow){
+      if(avaliableMove('down')){
+        checkMove('down');
+        document.getElementById("invalid").style.visibility = 'hidden';
+      }
+      else
+        document.getElementById("invalid").style.visibility = 'visible';
+    }
+    else{
+      if(avaliableMove('up')){
+        checkMove('up');
+        document.getElementById("invalid").style.visibility = 'hidden';
+      }
+      else
+        document.getElementById("invalid").style.visibility = 'visible';
+    }
+  }
+  else{
+    if(originCol < destCol){
+      if(avaliableMove('right')){
+        checkMove('right');
+        document.getElementById("invalid").style.visibility = 'hidden';
+      }
+      else
+        document.getElementById("invalid").style.visibility = 'visible';
+    }
+    else{
+      if(avaliableMove('left')){
+        checkMove('left');
+        document.getElementById("invalid").style.visibility = 'hidden';
+      }
+      else
+        document.getElementById("invalid").style.visibility = 'visible';
+    }
+    //moving left or right
+  }
+  
+}
 function clearMoves() {
   document.getElementById('left').disabled = true;
   document.getElementById('right').disabled = true;
@@ -695,8 +790,10 @@ function drawBoard() {
           
           switch(color) {
             case 'style=background-color:red':
+              // ctx.globalAlpha = .5;
               ctx.drawImage(document.getElementById('red-candy'), col*size, row*size, candyWidth, candyHeight);
               ctx.strokeRect(col*size, row*size, candyWidth, candyHeight);
+              // ctx.globalAlpha = 1.0;
               break;
             case 'style=background-color:green':
               ctx.drawImage(document.getElementById('green-candy'), col*size, row*size, candyWidth, candyHeight);
@@ -727,6 +824,8 @@ function drawBoard() {
   cntxt = canvas2.getContext('2d');
   cntxt.fillRect(0,0,200,200);
 }
+
+
 
 
 </script>
@@ -762,13 +861,13 @@ function drawBoard() {
         <img id ='red-special'  src ='./graphics/red-special.png'>
         <img id ='purple-special'  src ='./graphics/purple-special.png'>
         <img id ='bomb'  src ='./graphics/color-bomb.png'>
-        <canvas  id ='candyCanvas1' width='320' height='320' style='z-index:40; border:2px solid black; position:absolute;'></canvas>
+        <canvas  id ='candyCanvas1' width='320' height='320' style='z-index:40;  position:absolute;'></canvas>
         <canvas class ="d-flex-column align-self-center" id ='candyCanvas2' width='320' height='320' style='z-index:80'></canvas>
 
       </canvas>
       <script>drawBoard();</script>
       <script language ='javascript'>board.resetScore();</script>
-
+      <p class="mx-auto" id="invalid">Invalid Move!</p>
 
       <!-- <script> 
         window.onload = function(){
