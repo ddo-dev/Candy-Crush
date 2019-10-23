@@ -196,7 +196,6 @@ var Board = function(size)
     delete this.square[candy.row][candy.col];
     candy.row = candy.col = null;
     $(this).triggerHandler("remove", details);
-    // console.log(details);
   }
 
   /**
@@ -207,7 +206,7 @@ var Board = function(size)
   {
     if (this.isEmptyLocation(row, col))
     {
-      console.log("removeAt found no candy at " + r + "," + c);
+      console.log("removeAt found no candy at " + row + "," + col);
     }
     else
     {
@@ -325,8 +324,6 @@ var Board = function(size)
    */
   this.incrementScore = function(candy, row, col) {
     this.score += 1;
-    // console.log(this.score);
-
     $(this).triggerHandler("scoreUpdate", [{
       score: this.score,
       candy: candy,
@@ -339,7 +336,7 @@ var Board = function(size)
    * Gets the current score
    */
   this.getScore = function() {
-    return this.score
+    return this.score;
   }
 
 
