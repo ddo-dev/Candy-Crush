@@ -334,22 +334,7 @@ var Rules = function(board)
     }
   }
 
-  /* Clears board of all the bs thats in it
-  * just get rid of it all
-  * */
 
-  this.cleanBoard = function()
-  {
-    for (var col = 0; col < board.boardSize; col++)
-    {
-      for (var row = 0; row < board.boardSize; row++)
-      {
-        
-          board.removeAt(row, col);
-        
-      }
-    }
-  }
   /*
   *
   *  Helper method for rules.isMoveTypeValid
